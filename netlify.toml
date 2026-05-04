@@ -1,8 +1,10 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+command = "npm run build"
+publish = "build/client"
 
-[build.environment]
-  VITE_SUPABASE_URL = "https://your-url.supabase.co"
-  VITE_SUPABASE_ANON_KEY = "your-actual-key"
-  CI = "false"
+[dev]
+command = "npm run dev"
+framework = "vite"
+
+[template]
+required-extensions = ["supabase"]
