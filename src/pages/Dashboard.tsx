@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, Plus, X, Trophy, Users, Eye, Edit2, Printer, Clock } from 'lucide-react';
-import { db, getCurrentUser } from '../lib/supabase';
+import { ShieldAlert, Plus, X, Trophy, Users, Printer, Clock } from 'lucide-react';
+import { db, getCurrentUser, supabase } from '../lib/supabase';
 import Select from 'react-select';
 import MatchActionsModal from '../components/MatchActionsModal'; // Ensure this exists
 import DashboardHeader from '../components/DashboardHeader';
@@ -729,7 +729,6 @@ function ReportViewer({ data, onClose, title, match }: any) {
         ? 'INCIDENT REPORT'
         : title || 'MATCH REPORT';
 
-  const reportMatch = match || data;
   const topMetadataKeys = ['home_team','id','match_id', 'away_team', 'date', 'venue', 'stadium', 'assigned_officer_name', 'assigned_officer', 'tournament', 'league','officer_email','report_id','created_at','updated_at','status','officer_name','submitted_at'];
   const reportEntries = Object.entries(data).filter(([key]) => !topMetadataKeys.includes(key));
 
@@ -794,6 +793,7 @@ function ReportViewer({ data, onClose, title, match }: any) {
     incident_description: 'Please specify as accurately as possible what happened.',
     incident_resolution: 'What actions were taken to resolve the incident?',
     additional_information: 'Please supply any additional information.',
+    incident_photo_url: 'Incident Photo',
     overall_evaluation: 'What is your overall evaluation? Explain briefly.',
     issues_description: 'If there were any issues/concerns, please provide a description and evaluation of the resolution for each of the issues. Explain briefly.',
   };
@@ -881,7 +881,15 @@ function ReportViewer({ data, onClose, title, match }: any) {
             {orderedReportEntries.map(([key, val]: any) => (
               <div key={key} className="print-field border-b border-slate-200 pb-4">
                 <p className="tracking-[0.05em] text-slate-500 font-semibold">{formatReportLabel(key)}</p>
-                <p className="font-medium text-gray-900 mt-2">{String(val)}</p>
+                {key === 'incident_photo_url' && val ? (
+                  <img 
+                    src={supabase.storage.from('incident-photos').getPublicUrl(val).data.publicUrl} 
+                    alt="Incident photo" 
+                    className="max-w-full h-auto mt-2 rounded-lg shadow-md" 
+                  />
+                ) : (
+                  <p className="font-medium text-gray-900 mt-2">{String(val)}</p>
+                )}
               </div>
             ))}
           </div>

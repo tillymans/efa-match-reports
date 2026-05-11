@@ -1,11 +1,8 @@
-import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Select from 'react-select';
-import { db, getCurrentUser } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase'; // Your new Supabase client
 
 
@@ -29,12 +26,6 @@ const VENUES = [
   { value: 'manzini', label: 'Manzini' },
   { value: 'shiselweni', label: 'Shiselweni' }
 ];
-const TOURNAMENTS = [
-  { value: 'MTN Premier League', label: 'MTN Premier League' },
-  { value: 'Mulasport NFD', label: 'Mulasport NFD' },
-  { value: 'Ingwenyama Cup', label: 'SMVA Ingwenyama Cup' }
-];
-
 const STADIUMS = [{ value: 'Somhlolo National Stadium', label: 'Somhlolo National Stadium' }, { value: 'Mavuso Sports Centre', label: 'Mavuso Sports Centre' }];
 
 const schema = z.object({
@@ -43,12 +34,12 @@ const schema = z.object({
   date: z.string().min(1, 'Required'),
   homeTeam: z.string().min(1, 'Required'),
   awayTeam: z.string().min(1, 'Required'),
-  homeScore: z.number({ invalid_type_error: "Required" }).min(0, 'Required'),
-  awayScore: z.number({ invalid_type_error: "Required" }).min(0, 'Required'),
+  homeScore: z.number().min(0, { message: 'Required' }),
+  awayScore: z.number().min(0, { message: 'Required' }),
   league: z.string().min(1, 'Required'),
   venue: z.string().min(1, 'Required'),
   stadium: z.string().min(1, 'Required'),
-  attendance: z.number({ invalid_type_error: "Required" }).min(0, 'Required'),
+  attendance: z.number().min(0, { message: 'Required' }),
   accessControl: z.string().min(1, 'Required'),
   staircases: z.string().min(1, 'Required'),
   supporterBehavior: z.string().min(1, 'Required'),
@@ -68,13 +59,10 @@ type FormData = z.infer<typeof schema>;
 export default function MatchDayReport() {
   const location = useLocation();
   const navigate = useNavigate();
-  //const match = location.state?.matchData;
-  const { matchData: match, mode } = location.state || {}; // Extract mode
-  const isViewOnly = mode === 'view';
+  const { matchData: match } = location.state || {}; // Extract match data
 
 
-
-  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       officerName: match?.assignedOfficerName || 'Unassigned',
@@ -161,18 +149,18 @@ export default function MatchDayReport() {
             <Input 
               label="Tournament" 
               {...register('tournament')} 
-              disabled={isViewOnly} // <--- Locks field if mode is 'view'
+              disabled={!!match}
               error={errors.tournament} 
             />
-            <Input label="Officer Name" {...register('officerName')} error={errors.officerName} />
-            <Input label="Date" type="date" {...register('date')} error={errors.date} />
-            <SearchableDropdown label="League" name="league" control={control} options={LEAGUES} error={errors.league} />
-            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} />
-            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} />
+            <Input label="Officer Name" {...register('officerName')} disabled={!!match} error={errors.officerName} />
+            <Input label="Date" type="date" {...register('date')} disabled={!!match} error={errors.date} />
+            <SearchableDropdown label="League" name="league" control={control} options={LEAGUES} error={errors.league} disabled={!!match} />
+            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} disabled={!!match} />
+            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} disabled={!!match} />
             <Input label="Home Score" type="number" {...register('homeScore', { valueAsNumber: true })} error={errors.homeScore} />
             <Input label="Away Score" type="number" {...register('awayScore', { valueAsNumber: true })} error={errors.awayScore} />
-            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} />
-            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} />
+            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} disabled={!!match} />
+            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} disabled={!!match} />
             <Input label="Actual Stadium Attendance" type="number" {...register('attendance', { valueAsNumber: true })} error={errors.attendance} />
           </div>
           <div className="space-y-6 mt-8">
@@ -211,12 +199,12 @@ export default function MatchDayReport() {
   );
 }
 // Helpers
-function SearchableDropdown({ label, name, control, options, error }: any) {
+function SearchableDropdown({ label, name, control, options, error, disabled }: any) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <Controller name={name} control={control} render={({ field }) => (
-        <Select {...field} options={options} menuPortalTarget={document.body} 
+        <Select {...field} options={options} menuPortalTarget={document.body} isDisabled={disabled}
           onChange={(v: any) => field.onChange(v.value)} 
           value={options.find((o: any) => o.value === field.value)} 
           styles={{ 

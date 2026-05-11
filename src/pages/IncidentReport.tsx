@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Select from 'react-select';
-import { db, getCurrentUser } from '../lib/supabase';
+import { db } from '../lib/supabase';
 import { ShieldAlert, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Use Supabase
 
@@ -186,16 +186,15 @@ export default function IncidentReport() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-8 md:p-12 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input label="Match Date" type="date" {...register('matchDate')} error={errors.matchDate} disabled={isViewOnly} />
+            <Input label="Match Date" type="date" {...register('matchDate')} error={errors.matchDate} disabled={isViewOnly || !!match} />
             <Input label="Match Number" {...register('matchNo')} error={errors.matchNo} disabled={isViewOnly} />
-            <Input label="Kick-off time" {...register('kickOff')} error={errors.kickOff} disabled={isViewOnly} />
-            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} disabled={isViewOnly} />
-            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} disabled={isViewOnly} />
-            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} disabled={isViewOnly} />
-            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} disabled={isViewOnly} />
+            <Input label="Kick-off time" type="time" {...register('kickOff')} error={errors.kickOff} disabled={isViewOnly} />
+            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} disabled={isViewOnly || !!match} />
+            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} disabled={isViewOnly || !!match} />
+            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} disabled={isViewOnly || !!match} />
+            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} disabled={isViewOnly || !!match} />
           </div>
           
-
           <div className="space-y-6">
             <TextArea label="Where and when did the incident take place?" {...register('incidentLocation')} error={errors.incidentLocation} disabled={isViewOnly} />
             <TextArea label="Please specify as accurately as possible, what happened." {...register('whatHappened')} error={errors.whatHappened} disabled={isViewOnly} />

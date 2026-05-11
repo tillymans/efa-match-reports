@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Select from 'react-select';
-import { db, getCurrentUser } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase'; // Your new Supabase client
 
@@ -28,11 +27,6 @@ const VENUES = [
   { value: 'manzini', label: 'Manzini' },
   { value: 'shiselweni', label: 'Shiselweni' }
 ];
-const TOURNAMENTS = [
-  { value: 'MTN Premier League', label: 'MTN Premier League' },
-  { value: 'Mulasport NFD', label: 'Mulasport NFD' },
-  { value: 'Ingwenyama Cup', label: 'SMVA Ingwenyama Cup' }
-];
 
 const STADIUMS = [{ value: 'Somhlolo National Stadium', label: 'Somhlolo National Stadium' }, { value: 'Mavuso Sports Centre', label: 'Mavuso Sports Centre' }];
 
@@ -45,7 +39,7 @@ const schema = z.object({
   venue: z.string().min(1, 'Required'),
   league: z.string().min(1, 'Required'),
   stadium: z.string().min(1, 'Required'),
-  expectedAttendance: z.number({ invalid_type_error: "Required" }).min(0, 'Required'),
+  expectedAttendance: z.number().min(0, { message: 'Required' }),
   venueMeeting: z.string().min(1, 'Required'),
   stewardsBriefing: z.string().min(1, 'Required'),
   control_measures: z.string().min(1, 'Required'),
@@ -144,16 +138,16 @@ const onSubmit = async (data: FormData) => {
            <Input 
               label="Tournament" 
               {...register('tournament')} 
-              disabled={isViewOnly} // <--- Locks field if mode is 'view'
+              disabled={!!match}
               error={errors.tournament} 
             />
-            <Input label="Officer Name" {...register('officerName')} error={errors.officerName} />
-            <Input label="Date" type="date" {...register('date')} error={errors.date} />
-            <SearchableDropdown label="League" name="league" control={control} options={LEAGUES} error={errors.league} />
-            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} />
-            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} />
-            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} />
-            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} />
+            <Input label="Officer Name" {...register('officerName')} disabled={!!match} error={errors.officerName} />
+            <Input label="Date" type="date" {...register('date')} disabled={!!match} error={errors.date} />
+            <SearchableDropdown label="League" name="league" control={control} options={LEAGUES} error={errors.league} disabled={!!match} />
+            <SearchableDropdown label="Home Team" name="homeTeam" control={control} options={TEAMS} error={errors.homeTeam} disabled={!!match} />
+            <SearchableDropdown label="Away Team" name="awayTeam" control={control} options={TEAMS} error={errors.awayTeam} disabled={!!match} />
+            <SearchableDropdown label="Venue" name="venue" control={control} options={VENUES} error={errors.venue} disabled={!!match} />
+            <SearchableDropdown label="Stadium" name="stadium" control={control} options={STADIUMS} error={errors.stadium} disabled={!!match} />
           </div>
           <Input label="Expected Stadium Attendance" type="number" {...register('expectedAttendance', { valueAsNumber: true })} error={errors.expectedAttendance} />
           <div className="space-y-6 mt-8">
@@ -196,12 +190,12 @@ const onSubmit = async (data: FormData) => {
   );
 }
 // Helpers
-function SearchableDropdown({ label, name, control, options, error }: any) {
+function SearchableDropdown({ label, name, control, options, error, disabled }: any) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <Controller name={name} control={control} render={({ field }) => (
-        <Select {...field} options={options} menuPortalTarget={document.body} 
+        <Select {...field} options={options} menuPortalTarget={document.body} isDisabled={disabled}
           onChange={(v: any) => field.onChange(v.value)} 
           value={options.find((o: any) => o.value === field.value)} 
           styles={{ 

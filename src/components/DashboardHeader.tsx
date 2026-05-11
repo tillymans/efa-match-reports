@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, User, LogOut, Menu, X, Mail, AlertCircle } from 'lucide-react';
+import { Bell, User, LogOut, Menu, X, AlertCircle } from 'lucide-react';
 import { signOut } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
