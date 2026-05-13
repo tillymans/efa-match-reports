@@ -1,7 +1,21 @@
 import { createClient, type User } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL 
+                 || import.meta.env.SUPABASE_DATABASE_URL;
+
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY 
+                     || import.meta.env.SUPABASE_ANON_KEY;
+
+// === DEBUG LOGS ===
+console.log("🔍 Supabase Debug:");
+console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL ? "✅ Present" : "❌ Missing");
+console.log("SUPABASE_DATABASE_URL:", import.meta.env.SUPABASE_DATABASE_URL ? "✅ Present" : "❌ Missing");
+console.log("Final supabaseUrl used:", supabaseUrl ? "✅" : "❌");
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ CRITICAL: Supabase URL or Key is missing!");
+  throw new Error("Supabase configuration is missing. Check Netlify environment variables.");
+}
 
 export const db = createClient(supabaseUrl, supabaseAnonKey);
 export const supabase = db;
